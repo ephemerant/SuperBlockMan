@@ -9,12 +9,14 @@ function preload() {
 
 }
 
-var player,
+var WIDTH = 3000,
+	HEIGHT = 1000,
+	player,
 	cursors,
 	jumpButton,
-	jumpTimer = 0,
-	platforms = [],
-	movingPlatforms = [];
+	blocks = [],
+	movingPlatforms = [],
+	jumpReleased = true;
 
 function createSprite(w, h, c, x, y) {
 	var bmd = game.add.bitmapData(w, h);
@@ -31,35 +33,51 @@ function create() {
 
 	game.physics.startSystem(Phaser.Physics.ARCADE);
 
-	var platformCoords = [{
-		x: 50,
-		y: 210
+	this.world.setBounds(0, 0, WIDTH, HEIGHT);
+
+	var blockCoords = [{
+		x: 450,
+		y: 100,
+		w: 210,
+		h: 21
 	}, {
-		x: -300,
-		y: 210
+		x: 100,
+		y: 100,
+		w: 210,
+		h: 21
+	}, {
+		x: 1250,
+		y: 400,
+		w: 210,
+		h: 400
+	}, {
+		x: 900,
+		y: 400,
+		w: 210,
+		h: 400
 	}];
 
 	var movingPlatformCoords = [{
-		x: 10,
-		y: 140
+		x: 410,
+		y: 160
 	}, {
-		x: -200,
-		y: 140
+		x: 200,
+		y: 160
 	}];
 
 	// Spawn pre-determined platforms
-	platformCoords.forEach(function(coords) {
-		var platform = createSprite(210, 21, '#ffaa00', game.world.centerX + coords.x, game.world.centerY + coords.y);
+	blockCoords.forEach(function(data) {
+		var block = createSprite(data.w, data.h, '#ffaa00', data.x, HEIGHT - data.y);
 		// Add physics
-		game.physics.enable(platform, Phaser.Physics.ARCADE);
-		platform.body.immovable = true;
+		game.physics.enable(block, Phaser.Physics.ARCADE);
+		block.body.immovable = true;
 		// Track it via a global list
-		platforms.push(platform);
+		blocks.push(block);
 	});
 
 	// Spawn pre-determined moving platforms
 	movingPlatformCoords.forEach(function(coords) {
-		var platform = createSprite(150, 21, '#ff5500', game.world.centerX + coords.x, game.world.centerY + coords.y);
+		var platform = createSprite(150, 21, '#ff5500', coords.x, HEIGHT - coords.y);
 		// Add physics
 		game.physics.enable(platform, Phaser.Physics.ARCADE);
 		platform.body.immovable = true;
@@ -68,7 +86,7 @@ function create() {
 	});
 
 	// Create player and add physics properties
-	player = createSprite(42, 42, '#00ffaa', game.world.centerX, game.world.centerY);
+	player = createSprite(42, 42, '#00ffaa', 400, HEIGHT - 500);
 
 	game.physics.enable(player, Phaser.Physics.ARCADE);
 
@@ -78,14 +96,20 @@ function create() {
 
 	player.body.gravity.set(0, 1800);
 
+	game.camera.follow(player);
+
 	cursors = game.input.keyboard.createCursorKeys();
 	jumpButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
-
 }
 
 function playerOnSomething() {
 	// Check if the player is on a platform or the floor
 	return player.body.touching.down || player.body.onFloor();
+}
+
+function playerCanWallJump() {
+	// Check if the player is on a platform or the floor
+	return player.body.touching.left || player.body.touching.right || player.body.onWall();
 }
 
 function movingPlatform(platform) {
@@ -106,8 +130,8 @@ function movingPlatform(platform) {
 
 function update() {
 	// Check collision
-	platforms.forEach(function(platform) {
-		game.physics.arcade.collide(player, platform);
+	blocks.forEach(function(block) {
+		game.physics.arcade.collide(player, block);
 	});
 
 	// Check collision and move platforms
@@ -127,20 +151,35 @@ function update() {
 	}
 
 	if (!moved && playerOnSomething()) {
-		player.body.velocity.x *= 0.9;
+		player.body.velocity.x *= 0.8;
 		if (Math.abs(player.body.velocity.x) < 1) {
 			player.body.velocity.x = 0;
 		}
 	}
 
-	if (jumpButton.isDown && playerOnSomething() && game.time.now > jumpTimer) {
-		player.body.velocity.y = -600;
-		jumpTimer = game.time.now + 200;
+	if (jumpButton.isDown && jumpReleased) {
+		// Make it so they can't just hold down the key
+		jumpReleased = false;
+		// Check if it should be a jump or a walljump
+		if (playerOnSomething()) {
+			player.body.velocity.y = -650;
+		} else if (playerCanWallJump()) {
+			if (cursors.left.isDown) {
+				player.body.velocity.x = 340;
+				player.body.velocity.y = -550;
+			}
+			if (cursors.right.isDown) {
+				player.body.velocity.x = -340;
+				player.body.velocity.y = -550;
+			}
+		}
 	}
 
+	if (!jumpButton.isDown) {
+		jumpReleased = true;
+	}
 }
 
 function render() {
-	game.debug.spriteInfo(player, 32, 32);
-
+	// game.debug.spriteInfo(player, 32, 32);
 }
