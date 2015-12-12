@@ -1,4 +1,4 @@
-var game = new Phaser.Game(2000, 1000, Phaser.AUTO, 'screen', {
+var game = new Phaser.Game(1600, 815, Phaser.AUTO, '', {
 	init: init,
 	create: create,
 	update: update,
@@ -6,23 +6,29 @@ var game = new Phaser.Game(2000, 1000, Phaser.AUTO, 'screen', {
 });
 
 function init() {
+	this.input.maxPointers = 1;
+	this.stage.disableVisibilityChange = true;
 	this.stage.backgroundColor = "#111";
 	this.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
 	this.game.scale.fullScreenScaleMode = Phaser.ScaleManager.SHOW_ALL;
+	this.scale.pageAlignHorizontally = true;
+	this.scale.pageAlignVertically = true;
+	this.scale.updateLayout(true);
+	this.scale.refresh();
 	this.game.stage.smoothed = false;
 	this.game.canvas.oncontextmenu = function(t) {
 		t.preventDefault();
 	};
 }
 
-var WIDTH = 3000,
-HEIGHT = 1000,
-player,
-cursors,
-jumpButton,
-blocks = [],
-movingPlatforms = [],
-jumpReleased = true;
+var WIDTH = 5000,
+	HEIGHT = 2000,
+	player,
+	cursors,
+	jumpButton,
+	blocks = [],
+	movingPlatforms = [],
+	jumpReleased = true;
 
 function createSprite(w, h, c, x, y) {
 	var bmd = game.add.bitmapData(w, h);
@@ -42,6 +48,12 @@ function create() {
 	this.world.setBounds(0, 0, WIDTH, HEIGHT);
 
 	var blockCoords = [{
+		x: 0,
+		y: 10,
+		w: WIDTH,
+		h: 10,
+		c: '#5577ff'
+	}, {
 		x: 450,
 		y: 100,
 		w: 210,
@@ -54,25 +66,49 @@ function create() {
 		h: 21,
 		c: '#ffaa00'
 	}, {
-		x: 1250,
-		y: 400,
-		w: 210,
-		h: 400,
-		c: '#5577ff'
-	}, {
 		x: 900,
 		y: 400,
 		w: 210,
 		h: 400,
 		c: '#5577ff'
+	}, {
+		x: 1250,
+		y: 380,
+		w: 210,
+		h: 380,
+		c: '#5577ff'
+	}, {
+		x: 1600,
+		y: 360,
+		w: 210,
+		h: 360,
+		c: '#5577ff'
+	}, {
+		x: 1950,
+		y: 340,
+		w: 210,
+		h: 340,
+		c: '#5577ff'
+	}, {
+		x: 2300,
+		y: 320,
+		w: 210,
+		h: 320,
+		c: '#5577ff'
+	}, {
+		x: 2650,
+		y: 300,
+		w: 210,
+		h: 300,
+		c: '#5577ff'
 	}];
 
 	var movingPlatformCoords = [{
 		x: 410,
-		y: 160
+		y: 180
 	}, {
 		x: 200,
-		y: 160
+		y: 180
 	}];
 
 	// Spawn pre-determined platforms
@@ -106,7 +142,7 @@ function create() {
 
 	player.body.gravity.set(0, 1800);
 
-	player.body.maxVelocity.x = 1000;
+	player.body.maxVelocity.x = 1200;
 
 	game.camera.follow(player);
 
@@ -131,13 +167,13 @@ function movingPlatform(platform) {
 			x: platform.body.position.x,
 			y: platform.body.position.y
 		};
-		platform.body.velocity.y = -50;
+		platform.body.velocity.y = -70;
 	}
 	// Change direction after a certain distance and again when it returns
-	if (platform.originalPosition.y - platform.body.position.y >= 120 ||
+	if (platform.originalPosition.y - platform.body.position.y >= 200 ||
 		(platform.originalPosition.y < platform.body.position.y)) {
 		platform.body.velocity.y *= -1;
-}
+	}
 }
 
 function update() {
@@ -155,21 +191,37 @@ function update() {
 	var moved = false;
 
 	if (cursors.left.isDown) {
-		player.body.velocity.x -= 25;
+		// Gain more speed on ground
+		if (playerOnSomething()) {
+			player.body.velocity.x -= 35;
+		} else {
+			player.body.velocity.x -= 25;
+		}
 		moved = true;
 	} else if (cursors.right.isDown) {
-		player.body.velocity.x += 25;
+		// Gain more speed on ground
+		if (playerOnSomething()) {
+			player.body.velocity.x += 35;
+		} else {
+			player.body.velocity.x += 25;
+		}
 		moved = true;
 	}
 
-	if (!moved && playerOnSomething()) {
-		player.body.velocity.x *= 0.8;
+	if (!moved) {
+		if (playerOnSomething()) {
+			// Ground has more friction
+			player.body.velocity.x *= 0.8;
+		} else {
+			// Air has less friction
+			player.body.velocity.x *= 0.95;
+		}
 		if (Math.abs(player.body.velocity.x) < 1) {
 			player.body.velocity.x = 0;
 		}
 	}
 
-	if (jumpButton.isDown && jumpReleased) {		
+	if (jumpButton.isDown && jumpReleased) {
 		// Check if it should be a jump or a walljump
 		if (playerOnSomething()) {
 			// Make it so they can't just hold down the key
@@ -195,5 +247,5 @@ function update() {
 }
 
 function render() {
-	// game.debug.spriteInfo(player, 32, 32);
+	game.debug.bodyInfo(player, 32, 32);
 }
