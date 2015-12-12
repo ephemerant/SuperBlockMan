@@ -1,12 +1,18 @@
-var game = new Phaser.Game(800, 600, Phaser.CANVAS, 'screen', {
-	preload: preload,
+var game = new Phaser.Game(2000, 1000, Phaser.AUTO, 'screen', {
+	init: init,
 	create: create,
 	update: update,
 	render: render
 });
 
-function preload() {
-
+function init() {
+	this.stage.backgroundColor = "#111";
+	this.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+	this.game.scale.fullScreenScaleMode = Phaser.ScaleManager.SHOW_ALL;
+	this.game.stage.smoothed = false;
+	this.game.canvas.oncontextmenu = function(t) {
+		t.preventDefault();
+	};
 }
 
 var WIDTH = 3000,
@@ -39,22 +45,26 @@ function create() {
 		x: 450,
 		y: 100,
 		w: 210,
-		h: 21
+		h: 21,
+		c: '#ffaa00'
 	}, {
 		x: 100,
 		y: 100,
 		w: 210,
-		h: 21
+		h: 21,
+		c: '#ffaa00'
 	}, {
 		x: 1250,
 		y: 400,
 		w: 210,
-		h: 400
+		h: 400,
+		c: '#5577ff'
 	}, {
 		x: 900,
 		y: 400,
 		w: 210,
-		h: 400
+		h: 400,
+		c: '#5577ff'
 	}];
 
 	var movingPlatformCoords = [{
@@ -67,7 +77,7 @@ function create() {
 
 	// Spawn pre-determined platforms
 	blockCoords.forEach(function(data) {
-		var block = createSprite(data.w, data.h, '#ffaa00', data.x, HEIGHT - data.y);
+		var block = createSprite(data.w, data.h, data.c, data.x, HEIGHT - data.y);
 		// Add physics
 		game.physics.enable(block, Phaser.Physics.ARCADE);
 		block.body.immovable = true;
