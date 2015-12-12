@@ -1,9 +1,16 @@
-var game = new Phaser.Game(1600, 815, Phaser.AUTO, '', {
+var game = new Phaser.Game(window.innerWidth, window.innerHeight, Phaser.AUTO, '', {
 	init: init,
 	create: create,
 	update: update,
 	render: render
 });
+
+window.onresize = function() {
+	game.width = window.innerWidth;
+	game.height = window.innerHeight;
+	game.camera.setSize(game.width, game.height);
+	game.renderer.resize(game.width, game.height);
+};
 
 function init() {
 	this.input.maxPointers = 1;
