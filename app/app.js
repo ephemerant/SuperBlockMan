@@ -13,7 +13,8 @@ var player,
 	cursors,
 	jumpButton,
 	jumpTimer = 0,
-	platforms = [];
+	platforms = [],
+	movingPlatforms = [];
 
 function createSprite(w, h, c, x, y) {
 	var bmd = game.add.bitmapData(w, h);
@@ -38,15 +39,35 @@ function create() {
 		y: 210
 	}];
 
-	platformCoords.forEach(function(coords) {
-		platforms.push(createSprite(210, 21, '#ffaa00', game.world.centerX + coords.x, game.world.centerY + coords.y));
-	});
+	var movingPlatformCoords = [{
+		x: 10,
+		y: 140
+	}, {
+		x: -200,
+		y: 140
+	}];
 
-	platforms.forEach(function(platform) {
+	// Spawn pre-determined platforms
+	platformCoords.forEach(function(coords) {
+		var platform = createSprite(210, 21, '#ffaa00', game.world.centerX + coords.x, game.world.centerY + coords.y);
+		// Add physics
 		game.physics.enable(platform, Phaser.Physics.ARCADE);
 		platform.body.immovable = true;
+		// Track it via a global list
+		platforms.push(platform);
 	});
 
+	// Spawn pre-determined moving platforms
+	movingPlatformCoords.forEach(function(coords) {
+		var platform = createSprite(150, 21, '#ff5500', game.world.centerX + coords.x, game.world.centerY + coords.y);
+		// Add physics
+		game.physics.enable(platform, Phaser.Physics.ARCADE);
+		platform.body.immovable = true;
+		// Track it via a global list
+		movingPlatforms.push(platform);
+	});
+
+	// Create player and add physics properties
 	player = createSprite(42, 42, '#00ffaa', game.world.centerX, game.world.centerY);
 
 	game.physics.enable(player, Phaser.Physics.ARCADE);
@@ -63,12 +84,35 @@ function create() {
 }
 
 function playerOnSomething() {
+	// Check if the player is on a platform or the floor
 	return player.body.touching.down || player.body.onFloor();
 }
 
-function update() {
+function movingPlatform(platform) {
+	// Store original position and set velocity
+	if (!platform.originalPosition) {
+		platform.originalPosition = {
+			x: platform.body.position.x,
+			y: platform.body.position.y
+		};
+		platform.body.velocity.y = -50;
+	}
+	// Change direction after a certain distance and again when it returns
+	if (platform.originalPosition.y - platform.body.position.y >= 120 ||
+		(platform.originalPosition.y < platform.body.position.y)) {
+		platform.body.velocity.y *= -1;
+	}
+}
 
+function update() {
+	// Check collision
 	platforms.forEach(function(platform) {
+		game.physics.arcade.collide(player, platform);
+	});
+
+	// Check collision and move platforms
+	movingPlatforms.forEach(function(platform) {
+		movingPlatform(platform);
 		game.physics.arcade.collide(player, platform);
 	});
 
