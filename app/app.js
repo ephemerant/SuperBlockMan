@@ -16,13 +16,13 @@ function init() {
 }
 
 var WIDTH = 3000,
-	HEIGHT = 1000,
-	player,
-	cursors,
-	jumpButton,
-	blocks = [],
-	movingPlatforms = [],
-	jumpReleased = true;
+HEIGHT = 1000,
+player,
+cursors,
+jumpButton,
+blocks = [],
+movingPlatforms = [],
+jumpReleased = true;
 
 function createSprite(w, h, c, x, y) {
 	var bmd = game.add.bitmapData(w, h);
@@ -106,6 +106,8 @@ function create() {
 
 	player.body.gravity.set(0, 1800);
 
+	player.body.maxVelocity.x = 1000;
+
 	game.camera.follow(player);
 
 	cursors = game.input.keyboard.createCursorKeys();
@@ -135,7 +137,7 @@ function movingPlatform(platform) {
 	if (platform.originalPosition.y - platform.body.position.y >= 120 ||
 		(platform.originalPosition.y < platform.body.position.y)) {
 		platform.body.velocity.y *= -1;
-	}
+}
 }
 
 function update() {
@@ -153,10 +155,10 @@ function update() {
 	var moved = false;
 
 	if (cursors.left.isDown) {
-		player.body.velocity.x -= 30;
+		player.body.velocity.x -= 25;
 		moved = true;
 	} else if (cursors.right.isDown) {
-		player.body.velocity.x += 30;
+		player.body.velocity.x += 25;
 		moved = true;
 	}
 
@@ -167,13 +169,15 @@ function update() {
 		}
 	}
 
-	if (jumpButton.isDown && jumpReleased) {
-		// Make it so they can't just hold down the key
-		jumpReleased = false;
+	if (jumpButton.isDown && jumpReleased) {		
 		// Check if it should be a jump or a walljump
 		if (playerOnSomething()) {
+			// Make it so they can't just hold down the key
+			jumpReleased = false;
 			player.body.velocity.y = -650;
 		} else if (playerCanWallJump()) {
+			// Make it so they can't just hold down the key
+			jumpReleased = false;
 			if (cursors.left.isDown) {
 				player.body.velocity.x = 340;
 				player.body.velocity.y = -550;
