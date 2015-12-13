@@ -1,5 +1,6 @@
 var game = new Phaser.Game(window.innerWidth, window.innerHeight, Phaser.AUTO, '', {
 	init: init,
+	preload: preload,
 	create: create,
 	update: update,
 	render: render
@@ -28,6 +29,11 @@ function init() {
 	};
 }
 
+function preload() {
+	game.load.audio('jump', 'assets/sounds/jump.wav');
+	game.load.audio('land', 'assets/sounds/land.wav');
+}
+
 var WIDTH = 5000,
 	HEIGHT = 2000,
 	player,
@@ -35,7 +41,8 @@ var WIDTH = 5000,
 	jumpButton,
 	blocks = [],
 	movingPlatforms = [],
-	jumpReleased = true;
+	jumpReleased = true,
+	sounds = {};
 
 function createSprite(w, h, c, x, y) {
 	var bmd = game.add.bitmapData(w, h);
@@ -49,6 +56,9 @@ function createSprite(w, h, c, x, y) {
 }
 
 function create() {
+
+	sounds.jump = game.add.audio('jump');
+	sounds.land = game.add.audio('land');
 
 	game.physics.startSystem(Phaser.Physics.ARCADE);
 
@@ -215,6 +225,13 @@ function update() {
 		moved = true;
 	}
 
+	if (!playerOnSomething()) {
+		player.air = true;
+	} else if (player.air) {
+		sounds.land.play();
+		player.air = false;
+	}
+
 	if (!moved) {
 		if (playerOnSomething()) {
 			// Ground has more friction
@@ -233,10 +250,12 @@ function update() {
 		if (playerOnSomething()) {
 			// Make it so they can't just hold down the key
 			jumpReleased = false;
+			sounds.jump.play();
 			player.body.velocity.y = -650;
 		} else if (playerCanWallJump()) {
 			// Make it so they can't just hold down the key
 			jumpReleased = false;
+			sounds.jump.play();
 			if (cursors.left.isDown) {
 				player.body.velocity.x = 340;
 				player.body.velocity.y = -550;
